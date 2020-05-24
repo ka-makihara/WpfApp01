@@ -16,6 +16,7 @@ using System.Windows.Shapes;
 
 using System.Runtime.InteropServices;
 using System.Linq.Expressions;
+using System.IO;
 
 using IronPython.Runtime;
 using IronPython.Hosting;
@@ -36,6 +37,7 @@ namespace WpfApp1
 
         private static ScriptEngine _scriptEngine = Python.CreateEngine();
         private static ScriptScope _scriptScope = _scriptEngine.CreateScope();
+        private static ScriptScope _builtinScope = _scriptEngine.GetBuiltinModule();
 
         [DllImport("kernel32.dll")]
             private static extern int GetPrivateProfileString(
@@ -54,8 +56,8 @@ namespace WpfApp1
             // IronPython をインストールしていないので(?)得られるパスは'.'のみであった
             // よって、アプリ側でパスを追加してやる必要がある
             paths.Add("C:\\Users\\makih\\source\\repos\\IronPython.2.7.10\\Lib");
-            paths.Add("C:\\Users\\makih\\source\repos\\IronPython.2.7.10\\net45\\DLLs");
-            paths.Add("C:\\Users\\makih\\source\repos\\IronPython.2.7.10\\Lib\\site-packages");
+            paths.Add("C:\\Users\\makih\\source\\repos\\IronPython.2.7.10\\net45\\DLLs");
+            paths.Add("C:\\Users\\makih\\source\\repos\\IronPython.2.7.10\\Lib\\site-packages");
             paths.Add(AppDomain.CurrentDomain.BaseDirectory + "scripts");
             paths.Add(AppDomain.CurrentDomain.BaseDirectory + "programs");
             _scriptEngine.SetSearchPaths(paths);
@@ -66,7 +68,9 @@ namespace WpfApp1
             _scriptFiles.Add(new ScriptFile { Id = 3, Name = "cc", Description = "msg", Path = "C:\\" });
             _scriptFiles.Add(new ScriptFile { Id = 4, Name = "dd", Description = "msg", Path = "C:\\" });
             */
-            //GetScriptFiles(AppDomain.CurrentDomain.BaseDirectory + "scripts");
+            //_scriptScope.SetVariable("ftpToolExe", this);
+
+            GetScriptFiles(AppDomain.CurrentDomain.BaseDirectory + "scripts");
 
             scriptFile.ItemsSource = _scriptFiles;
             
@@ -78,16 +82,18 @@ namespace WpfApp1
             //指定のモジュールを読み込んで、モジュール内の関数を実行
             var scope = Python.ImportModule(_scriptEngine, "ftpToolUtils");
 
-            scope.SetVariable("filePath", path);
 
-            string cmd = "getScriptFiles()";
+            scope.SetVariable("__filePath", path);
 
-            _scriptEngine.Execute(cmd, scope);
+            string cmd = "getScriptFiles('" + path + "')";
+            string cmd2 = cmd.Replace("\\", "/");
+
+            _scriptEngine.Execute(cmd2, scope);
 
             var sec = scope.GetVariable<IList<string>>("result");
             foreach (string fn in sec)
             {
-                _scriptFiles.Add(new ScriptFile { Id = 0, Name = fn, Description = "", Path = fn });
+                _scriptFiles.Add(new ScriptFile { Id = 0, Name = System.IO.Path.GetFileNameWithoutExtension(fn), Description = "", Path = fn });
             }
         }
 
@@ -137,6 +143,10 @@ namespace WpfApp1
 
             return sb.ToString();
         }
+        public void ConsoleOut(string s)
+        {
+            Console.WriteLine(s);
+        }
 
         private void MenuItem_Click(object sender, RoutedEventArgs e)
         {
@@ -147,10 +157,7 @@ namespace WpfApp1
 
             UpdateCommonInfo inf = new UpdateCommonInfo();
 
-            result.AppendFormat("[Palette]");
-            result.Append(Environment.NewLine);
-
-            inf.Path = GetIniValue(iniFileName, string.Format("Palette"), GetName(() => inf.Path));
+             inf.Path = GetIniValue(iniFileName, string.Format("Palette"), GetName(() => inf.Path));
             inf.ID = GetIniValue(iniFileName, string.Format("Palette"), GetName(() => inf.ID));
 
             // IronPython 2.7.10 を使用する
@@ -159,6 +166,7 @@ namespace WpfApp1
             _scriptScope.SetVariable("glo", 123);          //数値を渡してみる
             _scriptScope.SetVariable("f_data", 12.345);    //浮動小数点
             _scriptScope.SetVariable("pyStr", "ss");       //文字列
+            _scriptScope.SetVariable("ftpToolExe", this);
 
             try {
                 src.Execute(_scriptScope);
@@ -180,11 +188,11 @@ namespace WpfApp1
 
             //ロードしたスクリプトの関数をよんでみる
             //pe.Execute("test_func(100)", scope);          //数値
-            _scriptEngine.Execute("test_func(\"C:/aa/bb.txt\")", _scriptScope);   //文字列　"\"は上手く渡せないかも
+            _scriptEngine.Execute("test_func('C:/aa/bb.txt')", _scriptScope);   //文字列
 
             //指定のモジュールを読み込んで、モジュール内の関数を実行
             var sc = Python.ImportModule(_scriptEngine, "sample");
-            string cmd = "get_iniFile_sections(\"" + iniFileName + "\")";
+            string cmd = "get_iniFile_sections('" + iniFileName + "')";
             string cmd2 = cmd.Replace("\\", "/");
             _scriptEngine.Execute(cmd2, sc);
             var sec = sc.GetVariable<IList<string>>("result");
@@ -201,6 +209,45 @@ namespace WpfApp1
             var ww = new InputIP();
             ww.ShowDialog();
             string ip = ww.IPtextBox.Text;
+        }
+
+        private void ConnectBtn_Click(object sender, RoutedEventArgs e)
+        {
+            string ip = ipAddr.Text;
+
+            _scriptScope.SetVariable("host_addr", ip);
+            ICollection<string> paths = _scriptEngine.GetSearchPaths();
+
+            var sc = Python.ImportModule(_scriptEngine, "ftpToolUtils");    
+
+            string cmd = "connect('" + ip + "')";
+            _scriptEngine.Execute(cmd, sc);
+            var ftp = sc.GetVariable<Object>("result");
+        }
+
+        private void scriptFile_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ScriptFile sf = scriptFile.SelectedItem as ScriptFile;
+
+            stepBtnArea.Children.Clear();
+
+            Button b1 = new Button();
+            b1.Content = "Dynamic 1";
+            b1.Name = "b1";
+            b1.Margin=new Thickness(10,10,10,10);
+            b1.Height = 35;
+            b1.FontSize = 18;
+
+            b1.Click += (ss, ee) => BtnEvent(ss);
+
+            stepBtnArea.Children.Add(b1);
+
+           
+
+        }
+        private void BtnEvent(object sender)
+        {
+            Console.WriteLine( ((Button)sender).Name);
         }
     }
 }

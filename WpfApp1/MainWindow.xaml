@@ -6,7 +6,7 @@
         xmlns:console="clr-namespace:PythonConsoleControl;assembly=PythonConsoleControl"
         xmlns:local="clr-namespace:WpfApp1"
         mc:Ignorable="d"
-        Title="MainWindow" Height="500.439" Width="623.256" Background="LightGray">
+        Title="MainWindow" Height="659.237" Width="633.238" Background="LightGray">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="26*"/>
@@ -23,19 +23,39 @@
                 <MenuItem Header="編集" Click="MenuItem_Click_1"/>
                 <MenuItem Header="接続" Click="MenuItem_Click"/>
             </Menu>
-            <StackPanel Height="50" Orientation="Horizontal" Margin="0,0,-0.333,0">
+            <StackPanel Height="62" Orientation="Horizontal">
+                <Label Content="IPアドレス:" FontSize="20" Height="35" Width="90" />
+                <TextBox x:Name="ipAddr" Text="localhost" FontSize="20" Height="40" Width="386" Margin="0,14">
+                    <TextBox.Effect>
+                        <DropShadowEffect/>
+                    </TextBox.Effect>
+                </TextBox>
+                <Button x:Name="connectBtn" Content="接続" FontSize="20" Height="35" Width="124" Margin="10,14,0,14" Click="ConnectBtn_Click">
+                    <Button.Effect>
+                        <DropShadowEffect/>
+                    </Button.Effect>
+                </Button>
+            </StackPanel>
+            <StackPanel Height="62" Orientation="Horizontal" Margin="0,0,-0.333,0">
                 <Label Content="スクリプト:" FontSize="20" Height="35" Width="90" />
-                <ComboBox Height="35" Name="scriptFile" Width="447">
+                <ComboBox Height="35" x:Name="scriptFile" Width="387" Margin="0,14" SelectionChanged="scriptFile_SelectionChanged">
                     <ComboBox.Effect>
                         <DropShadowEffect/>
                     </ComboBox.Effect>
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="2">
+                                <TextBlock Text="{Binding Name}" FontSize="18" Margin="2" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
                 </ComboBox>
             </StackPanel>
             <StackPanel Height="32" Margin="0,0,-0.333,0" Orientation="Horizontal">
                 <Label Content="アップデートバージョン" FontSize="20" Width="200" Margin="10,0,0,0" />
                 <Label Content="現在のバージョン" FontSize="20" Width="200" Margin="10,0,0,0" />
             </StackPanel>
-            <StackPanel Height="338" Margin="0,0,0,0" Orientation="Horizontal">
+            <StackPanel Height="338" Margin="0,0,-0.333,0" Orientation="Horizontal">
                 <StackPanel Width="420" Orientation="Horizontal">
                     <ListBox x:Name="updateVersion" Width="200" Margin="10,0,0,0" Background="#FFEEE5E1">
                         <ListBox.Effect>
@@ -64,8 +84,13 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
                 </StackPanel>
-                <StackPanel Width="198" Orientation="Vertical"/>
+                <StackPanel x:Name="stepBtnArea" Width="198" Orientation="Vertical"/>
             </StackPanel>
+            <ListView x:Name="infoView" Height="83.333" Margin="10,10,10,10">
+                <ListView.Effect>
+                    <DropShadowEffect/>
+                </ListView.Effect>
+            </ListView>
 
         </StackPanel>
     </Grid>
