@@ -269,6 +269,13 @@ namespace WpfApp1
         }
         private void BtnEvent(object sender)
         {
+            ScriptFile sf = scriptFile.SelectedItem as ScriptFile;
+
+            var scope = Python.ImportModule(_scriptEngine, sf.Name);
+            string cmd = ((Button)sender).Name;
+
+            _scriptEngine.Execute(cmd.Replace("\\", "/"), scope);
+
             Console.WriteLine( ((Button)sender).Name);
         }
     }
