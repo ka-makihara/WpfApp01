@@ -52,28 +52,25 @@ namespace WpfApp1
         {
             InitializeComponent();
 
+            string userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
             ICollection<string> paths = _scriptEngine.GetSearchPaths();
             // IronPython をインストールしていないので(?)得られるパスは'.'のみであった
             // よって、アプリ側でパスを追加してやる必要がある
-            paths.Add("C:\\Users\\makih\\source\\repos\\IronPython.2.7.10\\Lib");
-            paths.Add("C:\\Users\\makih\\source\\repos\\IronPython.2.7.10\\net45\\DLLs");
-            paths.Add("C:\\Users\\makih\\source\\repos\\IronPython.2.7.10\\Lib\\site-packages");
-            paths.Add(AppDomain.CurrentDomain.BaseDirectory + "scripts");
-            paths.Add(AppDomain.CurrentDomain.BaseDirectory + "programs");
+            paths.Add(userPath + "\\source\\repos\\WpfApp01\\IronPython.2.7.10\\Lib");
+            paths.Add(userPath + "\\source\\repos\\WpfApp01\\IronPython.2.7.10\\net45\\DLLs");
+            paths.Add(userPath + "\\source\\repos\\WpfApp01\\IronPython.2.7.10\\Lib\\site-packages");
+            paths.Add(AppDomain.CurrentDomain.BaseDirectory + "..\\scripts");
+            paths.Add(AppDomain.CurrentDomain.BaseDirectory + "..\\programs");
             _scriptEngine.SetSearchPaths(paths);
 
-            /*
-            _scriptFiles.Add(new ScriptFile { Id = 1, Name = "aa", Description = "msg", Path = "C:\\" });
-            _scriptFiles.Add(new ScriptFile { Id = 2, Name = "bb", Description = "msg", Path = "C:\\" });
-            _scriptFiles.Add(new ScriptFile { Id = 3, Name = "cc", Description = "msg", Path = "C:\\" });
-            _scriptFiles.Add(new ScriptFile { Id = 4, Name = "dd", Description = "msg", Path = "C:\\" });
-            */
-            //_scriptScope.SetVariable("ftpToolExe", this);
+            //自分のクラスの関数を呼び出せるようにしてみる
+            // この方法で、例えば　python 内で ftpToolExe.xxxx('msg') などで xxxx の関数呼び出しができる 
+            _scriptScope.SetVariable("ftpToolExe", this);
 
-            GetScriptFiles(AppDomain.CurrentDomain.BaseDirectory + "scripts");
+            GetScriptFiles(AppDomain.CurrentDomain.BaseDirectory + "..\\programs");
 
             scriptFile.ItemsSource = _scriptFiles;
-            
             updateVersion.ItemsSource = _updateVerInfo;
             curVersion.ItemsSource = _curVerInfo;
         }
@@ -82,21 +79,21 @@ namespace WpfApp1
             //指定のモジュールを読み込んで、モジュール内の関数を実行
             var scope = Python.ImportModule(_scriptEngine, "ftpToolUtils");
 
+            //scope.SetVariable("__filePath", path);  //変数を設定してデータを渡す方法
 
-            scope.SetVariable("__filePath", path);
+            string cmd = "getScriptFiles('" + path + "')"; //関数の引数で渡す
 
-            string cmd = "getScriptFiles('" + path + "')";
-            string cmd2 = cmd.Replace("\\", "/");
-
-            _scriptEngine.Execute(cmd2, scope);
+            // ※パスの引き渡しがうまくいかないので、前もってパスを変換する必要がある
+            //    例えば、"\\bin などとあると、どうも\b が最初に解釈されてしまい
+            //    間違ったパスが指定された、というようなエラーを起こす。
+            _scriptEngine.Execute(cmd.Replace("\\","/"), scope);
 
             var sec = scope.GetVariable<IList<string>>("result");
-            foreach (string fn in sec)
-            {
+            foreach (string fn in sec) {
                 _scriptFiles.Add(new ScriptFile { Id = 0, Name = System.IO.Path.GetFileNameWithoutExtension(fn), Description = "", Path = fn });
             }
         }
-
+/*
         private void button_Click(object sender, RoutedEventArgs e)
         {
             var dlg = new WpfApp1.MessageBoxEx();
@@ -112,7 +109,8 @@ namespace WpfApp1
 
             MessageBoxResult result = dlg.Result;
         }
-
+*/
+/*
         private void Script_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var item = scriptFile.SelectedItem as ScriptFile;
@@ -129,7 +127,7 @@ namespace WpfApp1
             dlg.Result = MessageBoxResult.No;
             dlg.ShowDialog();
         }
-
+*/
         public static string GetName<T>(Expression<Func<T>> e)
         {
             var member = (MemberExpression)e.Body;
@@ -148,25 +146,9 @@ namespace WpfApp1
             Console.WriteLine(s);
         }
 
-        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        private void ExecScriptFile(string file)
         {
-            string iniFileName = AppDomain.CurrentDomain.BaseDirectory + "UpdateCommon.inf";
-            string scrFileName = AppDomain.CurrentDomain.BaseDirectory + "test.py";
-
-            StringBuilder result = new StringBuilder();
-
-            UpdateCommonInfo inf = new UpdateCommonInfo();
-
-             inf.Path = GetIniValue(iniFileName, string.Format("Palette"), GetName(() => inf.Path));
-            inf.ID = GetIniValue(iniFileName, string.Format("Palette"), GetName(() => inf.ID));
-
-            // IronPython 2.7.10 を使用する
-            ScriptSource src = _scriptEngine.CreateScriptSourceFromFile(scrFileName);
-
-            _scriptScope.SetVariable("glo", 123);          //数値を渡してみる
-            _scriptScope.SetVariable("f_data", 12.345);    //浮動小数点
-            _scriptScope.SetVariable("pyStr", "ss");       //文字列
-            _scriptScope.SetVariable("ftpToolExe", this);
+            ScriptSource src = _scriptEngine.CreateScriptSourceFromFile(file);
 
             try {
                 src.Execute(_scriptScope);
@@ -174,8 +156,43 @@ namespace WpfApp1
             catch(Exception err)
             {
                 string msg = _scriptEngine.GetService<ExceptionOperations>().FormatException(err);
-                MessageBox.Show(msg, "実行エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                //MessageBox.Show(msg, "実行エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                var dlg = new WpfApp1.MessageBoxEx();
+                dlg.Message = msg;
+
+                dlg.Left = this.Left + 50;
+                dlg.Top = this.Top + 50;
+                dlg.Button = MessageBoxButton.OK;
+                dlg.Image = MessageBoxImage.Error;
+                dlg.Result = MessageBoxResult.OK;
+                dlg.ShowDialog();
             }
+        }
+
+        private void updateVersionInfo(string iniFileName, ScriptScope scope)
+        {
+            var sec = scope.GetVariable<IList<string>>("result");
+
+            foreach (string m in sec){
+                UpdateCommonInfo inf = new UpdateCommonInfo();
+
+                string ver = GetIniValue(iniFileName, string.Format(m), GetName(() => inf.Version));
+                _updateVerInfo.Add(new VerInfo { Name = m, Version = ver });
+                Console.WriteLine(m);
+            }
+        }
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            string iniFileName = AppDomain.CurrentDomain.BaseDirectory + "UpdateCommon.inf";
+
+            _scriptScope.SetVariable("glo", 123);          //数値を渡してみる
+            _scriptScope.SetVariable("f_data", 12.345);    //浮動小数点
+            _scriptScope.SetVariable("pyStr", "ss");       //文字列
+            _scriptScope.SetVariable("ftpToolExe", this);
+
+            //スクリプトファイルの実行
+            ExecScriptFile(AppDomain.CurrentDomain.BaseDirectory + "test.py");
 
             //var ret = scope.GetVariable<string>("pyresult");    //python の変数をうけとってみる
 
@@ -195,20 +212,19 @@ namespace WpfApp1
             string cmd = "get_iniFile_sections('" + iniFileName + "')";
             string cmd2 = cmd.Replace("\\", "/");
             _scriptEngine.Execute(cmd2, sc);
-            var sec = sc.GetVariable<IList<string>>("result");
-            foreach (string m in sec)
-            {
-                string ver = GetIniValue(iniFileName, string.Format(m), GetName(() => inf.Version));
-                _updateVerInfo.Add(new VerInfo { Name = m, Version = ver });
-                Console.WriteLine(m);
-            }
+            updateVersionInfo(iniFileName, sc);
         }
 
         private void MenuItem_Click_1(object sender, RoutedEventArgs e)
         {
+            /*
             var ww = new InputIP();
             ww.ShowDialog();
             string ip = ww.IPtextBox.Text;
+            */
+            DateTime dateTime = DateTime.Now;
+            infoView.AppendText(dateTime + "\n");
+            infoView.Select(infoView.Text.Length, 0);
         }
 
         private void ConnectBtn_Click(object sender, RoutedEventArgs e)
@@ -216,7 +232,6 @@ namespace WpfApp1
             string ip = ipAddr.Text;
 
             _scriptScope.SetVariable("host_addr", ip);
-            ICollection<string> paths = _scriptEngine.GetSearchPaths();
 
             var sc = Python.ImportModule(_scriptEngine, "ftpToolUtils");    
 
@@ -229,21 +244,28 @@ namespace WpfApp1
         {
             ScriptFile sf = scriptFile.SelectedItem as ScriptFile;
 
+            var scope = Python.ImportModule(_scriptEngine, "ftpToolUtils");
+            string cmd = "getFuncList('" + sf.Path + "')";
+            _scriptEngine.Execute(cmd.Replace("\\", "/"), scope);
+            var list = scope.GetVariable<IList<string>>("result");
+
             stepBtnArea.Children.Clear();
 
-            Button b1 = new Button();
-            b1.Content = "Dynamic 1";
-            b1.Name = "b1";
-            b1.Margin=new Thickness(10,10,10,10);
-            b1.Height = 35;
-            b1.FontSize = 18;
-
-            b1.Click += (ss, ee) => BtnEvent(ss);
-
-            stepBtnArea.Children.Add(b1);
-
-           
-
+            foreach( string nn in list)
+            {
+                Button b1 = new Button();
+                b1.Content = nn;
+                b1.Name = nn;
+                b1.Margin=new Thickness(10,5,10,5);
+                b1.Height = 35;
+                b1.FontSize = 18;
+                if (stepBtnArea.Children.Count > 0){
+                    //最初のボタン以外はDisableにする
+                    b1.IsEnabled = false;
+                }
+                b1.Click += (ss, ee) => BtnEvent(ss);
+                stepBtnArea.Children.Add(b1);
+            }
         }
         private void BtnEvent(object sender)
         {

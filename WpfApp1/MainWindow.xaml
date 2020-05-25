@@ -6,7 +6,7 @@
         xmlns:console="clr-namespace:PythonConsoleControl;assembly=PythonConsoleControl"
         xmlns:local="clr-namespace:WpfApp1"
         mc:Ignorable="d"
-        Title="MainWindow" Height="659.237" Width="633.238" Background="LightGray">
+        Title="MainWindow" Height="722.237" Width="633.238" Background="LightGray">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="26*"/>
@@ -86,11 +86,8 @@
                 </StackPanel>
                 <StackPanel x:Name="stepBtnArea" Width="198" Orientation="Vertical"/>
             </StackPanel>
-            <ListView x:Name="infoView" Height="83.333" Margin="10,10,10,10">
-                <ListView.Effect>
-                    <DropShadowEffect/>
-                </ListView.Effect>
-            </ListView>
+            <TextBox x:Name="infoView" VerticalScrollBarVisibility="Auto" FontSize="15" Height="138" Margin="10,10,10,10">
+            </TextBox>
 
         </StackPanel>
     </Grid>

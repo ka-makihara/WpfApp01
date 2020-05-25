@@ -36,23 +36,19 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IKVM.Reflection">
-      <HintPath>..\..\IronPython.2.7.10\net45\IKVM.Reflection.dll</HintPath>
+      <HintPath>..\IronPython.2.7.10\net45\IKVM.Reflection.dll</HintPath>
     </Reference>
-    <Reference Include="IronPython, Version=2.7.10.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\IronPython.2.7.10\net45\IronPython.dll</HintPath>
+    <Reference Include="IronPython">
+      <HintPath>..\IronPython.2.7.10\net45\IronPython.dll</HintPath>
     </Reference>
-    <Reference Include="IronPython.Modules, Version=2.7.10.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\IronPython.2.7.10\net45\IronPython.Modules.dll</HintPath>
+    <Reference Include="IronPython.Modules">
+      <HintPath>..\IronPython.2.7.10\net45\IronPython.Modules.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Dynamic, Version=1.2.3.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\IronPython.2.7.10\net45\Microsoft.Dynamic.dll</HintPath>
+    <Reference Include="Microsoft.Dynamic">
+      <HintPath>..\IronPython.2.7.10\net45\Microsoft.Dynamic.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Scripting, Version=1.2.3.0, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\IronPython.2.7.10\net45\Microsoft.Scripting.dll</HintPath>
+    <Reference Include="Microsoft.Scripting">
+      <HintPath>..\IronPython.2.7.10\net45\Microsoft.Scripting.dll</HintPath>
     </Reference>
     <Reference Include="PythonConsoleControl, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\IronPythonConsole.1.1.4.0\lib\net40\PythonConsoleControl.dll</HintPath>
