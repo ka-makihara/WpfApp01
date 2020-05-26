@@ -60,8 +60,8 @@ namespace WpfApp1
             paths.Add(userPath + "\\source\\repos\\WpfApp01\\IronPython.2.7.10\\Lib");
             paths.Add(userPath + "\\source\\repos\\WpfApp01\\IronPython.2.7.10\\net45\\DLLs");
             paths.Add(userPath + "\\source\\repos\\WpfApp01\\IronPython.2.7.10\\Lib\\site-packages");
-            paths.Add(AppDomain.CurrentDomain.BaseDirectory + "..\\scripts");
-            paths.Add(AppDomain.CurrentDomain.BaseDirectory + "..\\programs");
+            paths.Add(AppDomain.CurrentDomain.BaseDirectory + "..\\..\\scripts");
+            paths.Add(AppDomain.CurrentDomain.BaseDirectory + "..\\..\\programs");
             _scriptEngine.SetSearchPaths(paths);
 
             //自分のクラスの関数を呼び出せるようにしてみる
