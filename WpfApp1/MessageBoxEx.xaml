@@ -18,9 +18,11 @@
         </Border.Background>
 
         <StackPanel Orientation="Vertical">
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal" Height="106">
                 <Image Name="PART_Image" Width="38" Height="38" VerticalAlignment="Top" Margin="10,10,20,0" />
-                <TextBlock Name="PART_TextBlock" TextWrapping="Wrap" Width="340" Height="60" Margin="0,24,10,6" />
+                <ScrollViewer x:Name="errMsg" Width="362" Height="100" VerticalScrollBarVisibility="Auto" Margin="5,5,5,5">
+                    <TextBlock x:Name="PART_TextBlock" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                </ScrollViewer>
             </StackPanel>
             <StackPanel Name="PART_StackPanel" Orientation="Horizontal" HorizontalAlignment="Right">
             </StackPanel>

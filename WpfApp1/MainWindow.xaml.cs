@@ -65,15 +65,22 @@ namespace WpfApp1
             _scriptEngine.SetSearchPaths(paths);
 
             //自分のクラスの関数を呼び出せるようにしてみる
-            // この方法で、例えば　python 内で ftpToolExe.xxxx('msg') などで xxxx の関数呼び出しができる 
-            _scriptScope.SetVariable("ftpToolExe", this);
+            // この方法で、例えば　python 内で ftpTool.xxxx('msg') などで xxxx の関数呼び出しができる 
+            _scriptScope.SetVariable("ftpTool", this);
 
-            GetScriptFiles(AppDomain.CurrentDomain.BaseDirectory + "..\\programs");
+            //BuiltinModule のスコープに値を設定しておくと、import したモジュール内でも ftpTool.xxx として関数呼び出しができる
+            _scriptEngine.GetBuiltinModule().SetVariable("ftpTool", this);
+
+            GetScriptFiles(AppDomain.CurrentDomain.BaseDirectory + "..\\..\\programs");
 
             scriptFile.ItemsSource = _scriptFiles;
             updateVersion.ItemsSource = _updateVerInfo;
             curVersion.ItemsSource = _curVerInfo;
         }
+
+        //
+        // 指定したフォルダ下にあるスクリプトファイルの一覧を取得してスクリプト選択用のコンボボックスに設定
+        //
         private void GetScriptFiles(string path)
         {
             //指定のモジュールを読み込んで、モジュール内の関数を実行
@@ -93,23 +100,6 @@ namespace WpfApp1
                 _scriptFiles.Add(new ScriptFile { Id = 0, Name = System.IO.Path.GetFileNameWithoutExtension(fn), Description = "", Path = fn });
             }
         }
-/*
-        private void button_Click(object sender, RoutedEventArgs e)
-        {
-            var dlg = new WpfApp1.MessageBoxEx();
-            dlg.Message = "テストメッセージ";
-
-            dlg.Left = this.Left + 50;
-            dlg.Top = this.Top + 50;
-            //dlg.Background = Brushes.Wheat;
-            dlg.Button = MessageBoxButton.YesNoCancel;
-            dlg.Image = MessageBoxImage.Warning;
-            dlg.Result = MessageBoxResult.No;
-            dlg.ShowDialog();
-
-            MessageBoxResult result = dlg.Result;
-        }
-*/
 /*
         private void Script_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -146,6 +136,19 @@ namespace WpfApp1
             Console.WriteLine(s);
         }
 
+        private void FtpToolMsgBox(string msg)
+        {
+            var dlg = new MessageBoxEx();
+            dlg.Message = msg;
+
+            dlg.Left = this.Left + 50;
+            dlg.Top = this.Top + 30;
+            dlg.Button = MessageBoxButton.OK;
+            dlg.Image = MessageBoxImage.Error;
+            dlg.Result = MessageBoxResult.OK;
+            dlg.ShowDialog();
+        }
+
         private void ExecScriptFile(string file)
         {
             ScriptSource src = _scriptEngine.CreateScriptSourceFromFile(file);
@@ -157,16 +160,22 @@ namespace WpfApp1
             {
                 string msg = _scriptEngine.GetService<ExceptionOperations>().FormatException(err);
                 //MessageBox.Show(msg, "実行エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+                FtpToolMsgBox(msg);
+            }
+        }
 
-                var dlg = new WpfApp1.MessageBoxEx();
-                dlg.Message = msg;
+        private void ExecScriptModule(string moduleName, string cmd)
+        {
+            var scope = Python.ImportModule(_scriptEngine, moduleName);
+            scope.SetVariable("ftpTool", this);
 
-                dlg.Left = this.Left + 50;
-                dlg.Top = this.Top + 50;
-                dlg.Button = MessageBoxButton.OK;
-                dlg.Image = MessageBoxImage.Error;
-                dlg.Result = MessageBoxResult.OK;
-                dlg.ShowDialog();
+            try {
+                _scriptEngine.Execute(cmd.Replace("\\", "/"), scope);
+            }
+            catch(Exception err)
+            {
+                string msg = _scriptEngine.GetService<ExceptionOperations>().FormatException(err);
+                FtpToolMsgBox(msg);
             }
         }
 
@@ -271,12 +280,9 @@ namespace WpfApp1
         {
             ScriptFile sf = scriptFile.SelectedItem as ScriptFile;
 
-            var scope = Python.ImportModule(_scriptEngine, sf.Name);
-            string cmd = ((Button)sender).Name;
+            string cmd = ((Button)sender).Name + "('" + ipAddr.Text + "')";
 
-            _scriptEngine.Execute(cmd.Replace("\\", "/"), scope);
-
-            Console.WriteLine( ((Button)sender).Name);
+            ExecScriptModule(sf.Name, cmd);
         }
     }
 }

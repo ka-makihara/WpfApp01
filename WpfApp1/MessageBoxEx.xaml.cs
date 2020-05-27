@@ -139,8 +139,9 @@ namespace WpfApp1
 			var button = new Button();
 			button.Name = name;
 			button.Width = 80;
+			button.FontSize = 15;
 			button.Content = caption;
-			button.Margin = new Thickness(0, 30, 4, 0);
+			button.Margin = new Thickness(0, 20, 4, 0);
 
 			button.Click += new RoutedEventHandler(button_Click);
 
