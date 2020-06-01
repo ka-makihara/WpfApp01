@@ -3,12 +3,23 @@
 import sys
 import os
 
-import ftpToolUtils as ftp
+import ftpUtil
+
+#
+# ftoTool == C# exe
+#
 
 def update_step_1(host):
-	ftpTool.ConsoleOut('step_1')
-	ftpTool.ConsoleOut(host)
-	fjsl
+	'''
+	'''
+	ftp = ftpUtil.connectFTP(host)
+	#ftpUtil.rename(ftp,'Fuji','Fuji_app')
+	ftpUtil.mkdir(ftp,'Fuji')
+	ftpUtil.upload(ftp,"C:\\Users\\ka.makihara\\Desktop\\update_test\\Fuji",'Fuji')
+
+	#ftpTool.ConsoleOut('step_1')
+	#ftpTool.ConsoleOut(host)
+	ftp.close()
 	pass
 
 def update_step_2(host):

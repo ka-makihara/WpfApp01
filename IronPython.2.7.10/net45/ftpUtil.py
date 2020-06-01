@@ -105,8 +105,9 @@ def upload(ftp, local_path, remote):
 
 def main():
 	ftp = connectFTP('localhost')
+	#ftp.set_pasv('true')
 
-	upload(ftp,'C:\\Users\\ka.makihara\\Desktop\\update_test\\Fuji','\\Fuji_tmp')
+	upload(ftp,'C:\\Users\\ka.makihara\\Desktop\\update_test\\temp','\\Fuji_tmp')
 	#rm_dir(ftp,'Fuji_tmp')
 	#cur = os.getcwd()
 	#get_file(ftp,'/Fuji/System3/Program/Peripheral/UpdateCommon.inf','common.inf')

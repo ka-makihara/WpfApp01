@@ -3,7 +3,7 @@
 #
 # FTP_Tool Utilities
 #
-import clr
+#import clr
 
 #clr.AddReference("IronPython")
 #clr.AddReference("IronPython.Modules")
@@ -26,18 +26,26 @@ def getScriptFiles(path):
 	#    f.write(path+'\n')
 	result = glob.glob(path+'\\*.py')
 
-def connect(host):
+def connect(host, iniFile):
 	global result
 
-	result = ftpUtil.connectFTP(host)
+	ftp = ftpUtil.connectFTP(host)
+
+	ftpUtil.get_file(ftp,'/Fuji/System3/Program/Peripheral/UpdateCommon.inf',iniFile)
+
+	result = get_iniFile_sections(iniFile)
+
+	ftp.close()
 
 def get_iniFile_sections(path):
 	global result
 	
+	cur = os.getcwd()
 	ini = ConfigParser.ConfigParser()
 	ini.read(path)
 
 	result = ini.sections()
+	return result
 
 def getFuncList(scriptFile):
 	global result
@@ -46,3 +54,9 @@ def getFuncList(scriptFile):
 	module = import_module(scriptModule)
 
 	result = [x for x in dir(module) if 'update_' in x]
+
+def main():
+	rr = connect('localhost','common.ini')
+
+if __name__ == '__main__':
+	main()

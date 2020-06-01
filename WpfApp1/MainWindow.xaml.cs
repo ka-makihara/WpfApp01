@@ -164,7 +164,7 @@ namespace WpfApp1
             }
         }
 
-        private void ExecScriptModule(string moduleName, string cmd)
+        private ScriptScope ExecScriptModule(string moduleName, string cmd)
         {
             var scope = Python.ImportModule(_scriptEngine, moduleName);
             scope.SetVariable("ftpTool", this);
@@ -177,24 +177,11 @@ namespace WpfApp1
                 string msg = _scriptEngine.GetService<ExceptionOperations>().FormatException(err);
                 FtpToolMsgBox(msg);
             }
+            return scope;
         }
 
-        private void updateVersionInfo(string iniFileName, ScriptScope scope)
+        private void python_test()
         {
-            var sec = scope.GetVariable<IList<string>>("result");
-
-            foreach (string m in sec){
-                UpdateCommonInfo inf = new UpdateCommonInfo();
-
-                string ver = GetIniValue(iniFileName, string.Format(m), GetName(() => inf.Version));
-                _updateVerInfo.Add(new VerInfo { Name = m, Version = ver });
-                Console.WriteLine(m);
-            }
-        }
-        private void MenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            string iniFileName = AppDomain.CurrentDomain.BaseDirectory + "UpdateCommon.inf";
-
             _scriptScope.SetVariable("glo", 123);          //数値を渡してみる
             _scriptScope.SetVariable("f_data", 12.345);    //浮動小数点
             _scriptScope.SetVariable("pyStr", "ss");       //文字列
@@ -215,13 +202,26 @@ namespace WpfApp1
             //ロードしたスクリプトの関数をよんでみる
             //pe.Execute("test_func(100)", scope);          //数値
             _scriptEngine.Execute("test_func('C:/aa/bb.txt')", _scriptScope);   //文字列
+        }
+        private void MenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            string iniFileName = AppDomain.CurrentDomain.BaseDirectory + "UpdateCommon.inf";
 
             //指定のモジュールを読み込んで、モジュール内の関数を実行
-            var sc = Python.ImportModule(_scriptEngine, "sample");
             string cmd = "get_iniFile_sections('" + iniFileName + "')";
-            string cmd2 = cmd.Replace("\\", "/");
-            _scriptEngine.Execute(cmd2, sc);
-            updateVersionInfo(iniFileName, sc);
+
+            ScriptScope scope = ExecScriptModule("ftpToolUtils",cmd);
+
+            var sec = scope.GetVariable<IList<string>>("result");
+
+            foreach (string m in sec)
+            {
+                UpdateCommonInfo inf = new UpdateCommonInfo();
+
+                string ver = GetIniValue(iniFileName, string.Format(m), GetName(() => inf.Version));
+                _updateVerInfo.Add(new VerInfo { Name = m, Version = ver });
+                Console.WriteLine(m);
+            }
         }
 
         private void MenuItem_Click_1(object sender, RoutedEventArgs e)
@@ -238,15 +238,22 @@ namespace WpfApp1
 
         private void ConnectBtn_Click(object sender, RoutedEventArgs e)
         {
+            string iniFileName = AppDomain.CurrentDomain.BaseDirectory + "UpdateCommon_tmp.inf";
             string ip = ipAddr.Text;
 
-            _scriptScope.SetVariable("host_addr", ip);
+            string cmd = "connect('" + ip + "','" + iniFileName + "')";
+            ScriptScope scope = ExecScriptModule("ftpToolUtils", cmd);
 
-            var sc = Python.ImportModule(_scriptEngine, "ftpToolUtils");    
+            //var ftp = scope.GetVariable<Object>("result");
+            var sec = scope.GetVariable<IList<string>>("result");
 
-            string cmd = "connect('" + ip + "')";
-            _scriptEngine.Execute(cmd, sc);
-            var ftp = sc.GetVariable<Object>("result");
+            foreach (string m in sec)
+            {
+                UpdateCommonInfo inf = new UpdateCommonInfo();
+
+                string ver = GetIniValue(iniFileName, string.Format(m), GetName(() => inf.Version));
+                _curVerInfo.Add(new VerInfo { Name = m, Version = ver });
+            }
         }
 
         private void scriptFile_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -270,7 +277,7 @@ namespace WpfApp1
                 b1.FontSize = 18;
                 if (stepBtnArea.Children.Count > 0){
                     //最初のボタン以外はDisableにする
-                    b1.IsEnabled = false;
+                    //b1.IsEnabled = false;
                 }
                 b1.Click += (ss, ee) => BtnEvent(ss);
                 stepBtnArea.Children.Add(b1);
@@ -282,7 +289,7 @@ namespace WpfApp1
 
             string cmd = ((Button)sender).Name + "('" + ipAddr.Text + "')";
 
-            ExecScriptModule(sf.Name, cmd);
+            ScriptScope scope = ExecScriptModule(sf.Name, cmd);
         }
     }
 }
