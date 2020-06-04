@@ -82,7 +82,7 @@ def upload(ftp, local_path, remote):
 	#ファイル一覧の作成
 	files = glob.glob(local_path+'\\*')
 
-	dbg_print('c={}'.format(len(files)))
+	dbg_print('c={0}={1}'.format(len(files),local_path))
 	for file in files:
 		dbg_print('target={}\n'.format(file))
 		if os.path.isdir(file):
@@ -105,9 +105,8 @@ def upload(ftp, local_path, remote):
 
 def main():
 	ftp = connectFTP('localhost')
-	#ftp.set_pasv('true')
 
-	upload(ftp,'C:\\Users\\ka.makihara\\Desktop\\update_test\\temp','\\Fuji_tmp')
+	upload(ftp,'C:\\Users\\makih\\source\\repos\\update_test\\Fuji','\\Fuji_tmp')
 	#rm_dir(ftp,'Fuji_tmp')
 	#cur = os.getcwd()
 	#get_file(ftp,'/Fuji/System3/Program/Peripheral/UpdateCommon.inf','common.inf')

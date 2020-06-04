@@ -22,7 +22,8 @@ using IronPython.Runtime;
 using IronPython.Hosting;
 using IronPython.Modules;
 using Microsoft.Scripting.Hosting;
-
+using System.Net;
+using FluentFTP;
 
 namespace WpfApp1
 {
@@ -260,9 +261,8 @@ namespace WpfApp1
         {
             ScriptFile sf = scriptFile.SelectedItem as ScriptFile;
 
-            var scope = Python.ImportModule(_scriptEngine, "ftpToolUtils");
             string cmd = "getFuncList('" + sf.Path + "')";
-            _scriptEngine.Execute(cmd.Replace("\\", "/"), scope);
+            var scope = ExecScriptModule("ftpToolUtils",cmd);
             var list = scope.GetVariable<IList<string>>("result");
 
             stepBtnArea.Children.Clear();
@@ -279,17 +279,80 @@ namespace WpfApp1
                     //最初のボタン以外はDisableにする
                     //b1.IsEnabled = false;
                 }
-                b1.Click += (ss, ee) => BtnEvent(ss);
+                b1.Click += (ss, ee) => BtnEventAsync(ss);
                 stepBtnArea.Children.Add(b1);
             }
         }
-        private void BtnEvent(object sender)
+        private void FtpClient()
+        {
+            using (WebClient wc = new WebClient())
+            {
+                try
+                {
+                    wc.Credentials = new NetworkCredential("makihara", "wildgeese");
+
+                    wc.UploadFile("ftp://localhost/aaa.bin", @"UpdateCommon.inf");
+                }
+                catch(WebException ex)
+                {
+                    Console.WriteLine(ex);
+                }
+            }
+        }
+        private async Task<String> Ftp2Async()
+        {
+            FtpClient client = new FtpClient();
+            client.Host = "localhost";
+            client.Credentials = new NetworkCredential("makihara", "wildgeese");
+
+            await client.ConnectAsync();
+
+            //get a list of files and dir
+            foreach( FtpListItem item in await client.GetListingAsync("/Fuji"))
+            {
+                //if this is a file
+                if( item.Type == FtpFileSystemObjectType.File)
+                {
+                    //get the file size
+                    long size = await client.GetFileSizeAsync(item.FullName);
+
+                    //calculate a hash for the file on the server side (default algorithm)
+                    FtpHash hash = await client.GetChecksumAsync(item.FullName);
+                }
+
+                //get modified date/time of the file or folder
+                DateTime time = await  client.GetModifiedTimeAsync(item.FullName);
+            }
+            client.Disconnect();
+
+            return "aa";
+
+            /*
+            client.Connect();
+
+            //upload a file
+            client.UploadFile(@"UpdateCommon.inf", "/updateCommon.inf");
+
+            //rename the uploaded file
+            client.Rename("/updateCommon.inf", "bb.inf");
+
+            //download the file
+            client.DownloadFile(@"load.inf", "/bb.inf");
+
+            client.Disconnect();
+            */
+
+        }
+        private async Task BtnEventAsync(object sender)
         {
             ScriptFile sf = scriptFile.SelectedItem as ScriptFile;
 
             string cmd = ((Button)sender).Name + "('" + ipAddr.Text + "')";
 
-            ScriptScope scope = ExecScriptModule(sf.Name, cmd);
+            //ScriptScope scope = ExecScriptModule(sf.Name, cmd);
+            // FtpClient();
+            Task<String> task = Task.Run(() => Ftp2Async());
+            String result = await task;
         }
     }
 }
