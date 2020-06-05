@@ -40,6 +40,8 @@ namespace WpfApp1
         private static ScriptScope _scriptScope = _scriptEngine.CreateScope();
         private static ScriptScope _builtinScope = _scriptEngine.GetBuiltinModule();
 
+        private static FtpClientCtrl _ftpCtrl = new FtpClientCtrl();
+
         [DllImport("kernel32.dll")]
             private static extern int GetPrivateProfileString(
                 string lpApplicationName,
@@ -68,6 +70,7 @@ namespace WpfApp1
             //自分のクラスの関数を呼び出せるようにしてみる
             // この方法で、例えば　python 内で ftpTool.xxxx('msg') などで xxxx の関数呼び出しができる 
             _scriptScope.SetVariable("ftpTool", this);
+            _scriptScope.SetVariable( "ftpCtrl", _ftpCtrl );
 
             //BuiltinModule のスコープに値を設定しておくと、import したモジュール内でも ftpTool.xxx として関数呼び出しができる
             _scriptEngine.GetBuiltinModule().SetVariable("ftpTool", this);
@@ -241,6 +244,8 @@ namespace WpfApp1
         {
             string iniFileName = AppDomain.CurrentDomain.BaseDirectory + "UpdateCommon_tmp.inf";
             string ip = ipAddr.Text;
+
+            _ftpCtrl.Connect( ip, "makihara", "wildgeese" );
 
             string cmd = "connect('" + ip + "','" + iniFileName + "')";
             ScriptScope scope = ExecScriptModule("ftpToolUtils", cmd);
