@@ -70,10 +70,11 @@ namespace WpfApp1
             //自分のクラスの関数を呼び出せるようにしてみる
             // この方法で、例えば　python 内で ftpTool.xxxx('msg') などで xxxx の関数呼び出しができる 
             _scriptScope.SetVariable("ftpTool", this);
-            _scriptScope.SetVariable( "ftpCtrl", _ftpCtrl );
+            _scriptScope.SetVariable("ftpCtrl", _ftpCtrl );
 
             //BuiltinModule のスコープに値を設定しておくと、import したモジュール内でも ftpTool.xxx として関数呼び出しができる
             _scriptEngine.GetBuiltinModule().SetVariable("ftpTool", this);
+            _scriptEngine.GetBuiltinModule().SetVariable("ftpCtrl", _ftpCtrl);
 
             GetScriptFiles(AppDomain.CurrentDomain.BaseDirectory + "..\\..\\programs");
 
@@ -171,7 +172,6 @@ namespace WpfApp1
         private ScriptScope ExecScriptModule(string moduleName, string cmd)
         {
             var scope = Python.ImportModule(_scriptEngine, moduleName);
-            scope.SetVariable("ftpTool", this);
 
             try {
                 _scriptEngine.Execute(cmd.Replace("\\", "/"), scope);
@@ -245,7 +245,7 @@ namespace WpfApp1
             string iniFileName = AppDomain.CurrentDomain.BaseDirectory + "UpdateCommon_tmp.inf";
             string ip = ipAddr.Text;
 
-            _ftpCtrl.Connect( ip, "makihara", "wildgeese" );
+            _ftpCtrl.ConnectFTP( ip, "makihara", "wildgeese" );
 
             string cmd = "connect('" + ip + "','" + iniFileName + "')";
             ScriptScope scope = ExecScriptModule("ftpToolUtils", cmd);
@@ -348,16 +348,20 @@ namespace WpfApp1
             */
 
         }
-        private async Task BtnEventAsync(object sender)
+        private void BtnEventAsync(object sender)
         {
             ScriptFile sf = scriptFile.SelectedItem as ScriptFile;
 
             string cmd = ((Button)sender).Name + "('" + ipAddr.Text + "')";
 
-            //ScriptScope scope = ExecScriptModule(sf.Name, cmd);
+            ScriptScope scope = ExecScriptModule(sf.Name, cmd);
             // FtpClient();
-            Task<String> task = Task.Run(() => Ftp2Async());
-            String result = await task;
+            //Task<String> task = Task.Run(() => Ftp2Async());
+            //String result = await task;
+        }
+        public void TestFunc(string str)
+        {
+            FtpToolMsgBox(str);
         }
     }
 }

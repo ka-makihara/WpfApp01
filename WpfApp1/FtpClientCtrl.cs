@@ -9,12 +9,14 @@ using FluentFTP;
 
 namespace WpfApp1
 {
-    class FtpClientCtrl
+    //'public' class にしないとメンバー関数にアクセスできない
+
+    public class FtpClientCtrl
     {
-        private FtpClient client = null;
+        private  FtpClient client = null;
 
 
-        public bool Connect(String host, String user, String pass)
+        public bool ConnectFTP(string host, string user, string pass)
         {
            if( client == null) {
                 client = new FtpClient();
@@ -34,6 +36,21 @@ namespace WpfApp1
                 client.Disconnect();
             }
             return true;
+        }
+        public bool MakeDirectory(String path)
+        {
+            if (client != null){
+                return client.CreateDirectory(path);
+            }
+            return false;
+        }
+        public bool Rename(String fromPath, String toPath)
+        {
+            if( client != null){
+                client.Rename(fromPath, toPath);
+                return true;
+            }
+            return false;
         }
         public bool Upload(String localPath, String remotePath)
         {
@@ -55,6 +72,17 @@ namespace WpfApp1
                 return false;
             }
             List<FtpResult> status = client.UploadDirectory( localPath, remotePath,FtpFolderSyncMode.Update,FtpRemoteExists.Overwrite );
+
+            return true;
+        }
+        public bool RemoveDirectory(String remotePath)
+        {
+            if( client == null)
+            {
+                return false;
+            }
+
+            client.DeleteDirectory(remotePath,FtpListOption.AllFiles | FtpListOption.Recursive);
 
             return true;
         }
