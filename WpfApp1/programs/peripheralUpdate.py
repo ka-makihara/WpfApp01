@@ -9,6 +9,7 @@ import ftpUtil
 # ftoTool == C# exe
 # ftpCtrl == C# FtpClientCtrl class
 #
+base_folder = 'C:\\Users\\ka.makihara\\develop\\repos\\WpfApp01\\update_test'
 
 def update_step_1(host):
 	'''
@@ -16,7 +17,7 @@ def update_step_1(host):
 	ftpCtrl.ConnectFTP(host,'makihara','wildgeese')
 	ftpCtrl.Rename('Fuji','Fuji_app')
 	ftpCtrl.MakeDirectory('Fuji')
-	ftpCtrl.UploadDirectory("C:\\Users\\makih\\source\\repos\\update_test\\Fuji",'Fuji')
+	ftpCtrl.UploadDirectory(base_folder + '\\Fuji','Fuji')
 	ftpCtrl.RemoveDirectory('Fuji')
 
 	#ftpTool.ConsoleOut('step_1')
@@ -25,9 +26,9 @@ def update_step_1(host):
 	pass
 
 def update_step_2(host):
-	ftpTool.ConsoleOut('step_2')
+	ftpCtrl.ConsoleOut('step_2')
 	pass
 
 def update_step_3(host):
-	ftpTool.ConsoleOut('step_3')
+	ftpCtrl.ConsoleOut('step_3')
 	pass
